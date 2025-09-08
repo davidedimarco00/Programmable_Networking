@@ -18,8 +18,8 @@ def myNetwork():
     h3 = net.addHost('h3', ip='192.168.1.3')
     h4 = net.addHost('h4', ip='192.168.1.4')
     #2 server dietro al VIP 192.168.1.100 (gestito dal controller)
-    srv1 = net.addHost('srv1', ip='192.168.1.101')#, mac='00:00:00:00:01:01')
-    srv2 = net.addHost('srv2', ip='192.168.1.102')#, mac='00:00:00:00:01:02')
+    srv1 = net.addHost('srv1', ip='192.168.1.101')
+    srv2 = net.addHost('srv2', ip='192.168.1.102')
 
     # Collegamenti host ↔ switch
     for h in (h1, h2, h3, h4, srv1, srv2):
