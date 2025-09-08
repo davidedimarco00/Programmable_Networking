@@ -12,13 +12,12 @@ def myNetwork():
 
     s1 = net.addSwitch('s1')
 
-    # 4 host client
-    h1 = net.addHost('h1', ip='192.168.1.1')# mac='00:00:00:00:00:11')
-    h2 = net.addHost('h2', ip='192.168.1.2')# mac='00:00:00:00:00:12')
-    h3 = net.addHost('h3', ip='192.168.1.3')# mac='00:00:00:00:00:13')
-    h4 = net.addHost('h4', ip='192.168.1.4')# mac='00:00:00:00:00:14')
-
-    # 2 server dietro al VIP 192.168.1.100 (gestito dal controller)
+    #4 host client
+    h1 = net.addHost('h1', ip='192.168.1.1')
+    h2 = net.addHost('h2', ip='192.168.1.2')
+    h3 = net.addHost('h3', ip='192.168.1.3')
+    h4 = net.addHost('h4', ip='192.168.1.4')
+    #2 server dietro al VIP 192.168.1.100 (gestito dal controller)
     srv1 = net.addHost('srv1', ip='192.168.1.101')#, mac='00:00:00:00:01:01')
     srv2 = net.addHost('srv2', ip='192.168.1.102')#, mac='00:00:00:00:01:02')
 
