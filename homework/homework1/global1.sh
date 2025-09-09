@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# === CREAZIONE HOST E INTERFACCE ===
+#host + interfacce
 for n in 1 2 
 do
     for h in 1 2
@@ -15,7 +15,7 @@ do
     done
 done
 
-# === AGGIUNTA GATEWAY PER OGNI HOST ===
+#aggiunta del gateway
 ip netns exec H11 ip route add default via 10.0.1.254
 ip netns exec H12 ip route add default via 10.0.1.254
 ip netns exec H21 ip route add default via 10.0.2.254
@@ -23,13 +23,13 @@ ip netns exec H22 ip route add default via 10.0.2.254
 
 echo "Aggiunto default gateway agli host"
 
-# === CREAZIONE SWITCH OVS ===
+#creazione switch
 for i in 1 2 3
 do
     ovs-vsctl add-br LAN$i
 done
 
-# === COLLEGAMENTI HOST A SWITCH E TAG VLAN ===
+#collegamento host a switch e vlan
 ovs-vsctl add-port LAN1 eth-H11
 ovs-vsctl set port eth-H11 tag=1
 ip link set eth-H11 up
@@ -46,7 +46,7 @@ ovs-vsctl add-port LAN2 eth-H22
 ovs-vsctl set port eth-H22 tag=2
 ip link set eth-H22 up
 
-# === COLLEGAMENTI TRA SWITCH ===
+#collego gli switch tra di loro
 ip link add tlink1 type veth peer name tlink2
 ip link set tlink1 up
 ip link set tlink2 up
@@ -81,8 +81,8 @@ ip netns exec GW ip link set eth-GW.2 up
 ip netns exec GW ip addr add 10.0.1.254/24 dev eth-GW.1
 ip netns exec GW ip addr add 10.0.2.254/24 dev eth-GW.2
 
-# === ISOLAMENTO: NON abilitiamo il forwarding IP ===
-# ip netns exec GW sysctl -w net.ipv4.ip_forward=1  ← NON ATTIVATO!
+#non abilito il forwarding IP altrimenti entrambi potrebbero pingarsi tra loro
+# ip netns exec GW sysctl -w net.ipv4.ip_forward=1
 
 echo "Configurazione completata con successo (VLAN isolate anche a livello IP)"
 
