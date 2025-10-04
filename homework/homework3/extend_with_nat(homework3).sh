@@ -37,5 +37,5 @@ ip netns exec GW iptables -A FORWARD -s 10.0.2.0/24 -d 10.0.1.0/24 -j DROP
 # ROUTE DI RITORNO PER HOST ESTERNO
 ip netns exec HEXT ip route add default via 192.168.1.254
 
-echo "✅ Topologia estesa con NAT, firewall e host esterno completata."
+echo "Topologia estesa con NAT, firewall e host esterno completata."
 
