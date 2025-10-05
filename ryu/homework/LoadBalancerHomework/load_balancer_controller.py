@@ -100,7 +100,7 @@ class RoundRobinLoadBalancer(app_manager.RyuApp):
         datapath.send_msg(out)
         self.logger.info("ARP probe inviato per %s (FLOOD)", target_ip)
 
-    # -------------------- Handlers --------------------
+    #event handlers
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -108,14 +108,14 @@ class RoundRobinLoadBalancer(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        # Table-miss: manda i pacchetti al controller
+        # Table-miss: manda i pacchetti al controller (quando arriva un pacchetto nuovo)
         match = parser.OFPMatch()
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, ofproto.OFPCML_NO_BUFFER)]
         instructions = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
         flow_mod = parser.OFPFlowMod(datapath=datapath, priority=0, match=match, instructions=instructions)
         datapath.send_msg(flow_mod)
 
-        # Pre-probe dei backend
+        #popolo la tabella ARP dei backend
         for backend in self.BACKENDS:
             self.send_arp_probe(datapath, backend['ip'])
 
@@ -133,7 +133,7 @@ class RoundRobinLoadBalancer(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         eth_frame = pkt.get_protocols(ethernet.ethernet)[0]
 
-        # L2 learning
+        #L2 learning
         self.mac_learning_table.setdefault(switch_id, {})
         self.mac_learning_table[switch_id][eth_frame.src] = in_port
 
@@ -180,7 +180,7 @@ class RoundRobinLoadBalancer(app_manager.RyuApp):
             backend_mac = backend.get('mac')
             backend_port = backend.get('switch_port')
 
-            # Se non conosciamo ancora MAC/porta del backend scelto
+            # Se non conosciamo MAC/porta del backend, invia ARP probe e aspetta
             if not backend_mac or not backend_port:
                 self.send_arp_probe(datapath, backend_ip)
                 return
