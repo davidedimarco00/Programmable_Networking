@@ -63,7 +63,7 @@ ovs-vsctl add-port LAN3 tlink4
 ovs-vsctl set port tlink3 trunks=1,2
 ovs-vsctl set port tlink4 trunks=1,2
 
-# === COLLEGAMENTO LAN3 <-> GATEWAY ===
+#collego il gateway
 ip link add veth0 type veth peer name eth-GW
 ip link set veth0 up
 ovs-vsctl add-port LAN3 veth0
@@ -73,7 +73,7 @@ ip netns add GW
 ip link set eth-GW netns GW
 ip netns exec GW ip link set eth-GW up
 
-# === CONFIGURAZIONE INTERFACCE VLAN DEL GATEWAY ===
+#configurazione interfacce gateway
 ip netns exec GW ip link add link eth-GW name eth-GW.1 type vlan id 1
 ip netns exec GW ip link add link eth-GW name eth-GW.2 type vlan id 2
 ip netns exec GW ip link set eth-GW.1 up
@@ -84,5 +84,5 @@ ip netns exec GW ip addr add 10.0.2.254/24 dev eth-GW.2
 #non abilito il forwarding IP altrimenti entrambi potrebbero pingarsi tra loro
 # ip netns exec GW sysctl -w net.ipv4.ip_forward=1
 
-echo "Configurazione completata con successo (VLAN isolate anche a livello IP)"
+echo "Configurazione completata"
 

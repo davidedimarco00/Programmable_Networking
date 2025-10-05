@@ -49,7 +49,7 @@ done
 
 # --- IP FORWARDING ---
 for r in R1 R2 R3; do
-  sudo ip netns exec $r sysctl -w net.ipv4.ip_forward=1 >/dev/null
+  sudo ip netns exec $r sysctl -w net.ipv4.ip_forward=1
 done
 
 # --- IP ADDRESSES ---
