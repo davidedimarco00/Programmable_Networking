@@ -1,17 +1,17 @@
 #!/bin/bash
 set -e
 
-# --- NAMESPACES ---
+#creo i namsepace
 for ns in H1001 H1002 H11 H21 R1 R2 R3; do
   sudo ip netns add $ns
 done
 
-# --- SWITCHES ---
+#creo gli switch
 for sw in SW1 SW2; do
   sudo ovs-vsctl add-br $sw
 done
 
-# --- HOST-SWITCH LINKS ---
+#connetto host e switch
 connect_host() {
   h=$1; sw=$2
   sudo ip link add veth-$h-$sw type veth peer name veth-$sw-$h
@@ -25,7 +25,7 @@ connect_host H1001 SW1
 connect_host H21 SW2
 connect_host H1002 SW2
 
-# --- ROUTER-SWITCH LINKS ---
+#connetto switch e router
 connect_router() {
   r=$1; sw=$2
   sudo ip link add veth-$r-$sw type veth peer name veth-$sw-$r
@@ -37,7 +37,7 @@ connect_router() {
 connect_router R1 SW1
 connect_router R2 SW2
 
-# --- ROUTER INTERCONNECTIONS ---
+#connetto i router tra di loro
 for link in "R1 R3 10.0.10.0" "R2 R3 10.0.10.4"; do
   set -- $link
   sudo ip link add veth-$1-$2 type veth peer name veth-$2-$1
@@ -47,12 +47,12 @@ for link in "R1 R3 10.0.10.0" "R2 R3 10.0.10.4"; do
   sudo ip netns exec $2 ip link set veth-$2-$1 up
 done
 
-# --- IP FORWARDING ---
+#abilito ip forwarding sui router
 for r in R1 R2 R3; do
   sudo ip netns exec $r sysctl -w net.ipv4.ip_forward=1
 done
 
-# --- IP ADDRESSES ---
+#assegno gli indirizzi IP
 sudo ip netns exec H1001 ip addr add 10.0.100.1/24 dev veth-H1001-SW1
 sudo ip netns exec H1002 ip addr add 10.0.100.2/24 dev veth-H1002-SW2
 sudo ip netns exec H11 ip addr add 10.0.1.1/24 dev veth-H11-SW1
@@ -65,13 +65,13 @@ sudo ip netns exec R3 ip addr add 10.0.10.2/30 dev veth-R3-R1
 sudo ip netns exec R3 ip addr add 10.0.10.5/30 dev veth-R3-R2
 sudo ip netns exec R2 ip addr add 10.0.10.6/30 dev veth-R2-R3
 
-# --- ROUTES ---
+#aggiungo le rotte (statiche)
 sudo ip netns exec R1 ip route add 10.0.10.4/30 via 10.0.10.2
 sudo ip netns exec R2 ip route add 10.0.10.0/30 via 10.0.10.5
 sudo ip netns exec H11 ip route add default via 10.0.1.254
 sudo ip netns exec H21 ip route add default via 10.0.2.254
 
-# --- VXLAN (br100) ---
+#setup della vxlan
 setup_vxlan() {
   ns=$1; localip=$2; remoteip=$3; lan=$4
   sudo ip netns exec $ns ip link add L12 type vxlan id 100 local $localip remote $remoteip dstport 4789
@@ -83,7 +83,7 @@ setup_vxlan() {
 setup_vxlan R1 10.0.10.1 10.0.10.6 SW1
 setup_vxlan R2 10.0.10.6 10.0.10.1 SW2
 
-# --- INTERNAL IFACE PER IP GATEWAY ---
+#setto le interfacce interne ai router
 for r in R1 R2; do
   lan=$( [ "$r" = "R1" ] && echo 1 || echo 2 )
   sudo ip netns exec $r ip addr del 10.0.$lan.254/24 dev veth-$r-SW$lan
@@ -94,12 +94,20 @@ for r in R1 R2; do
   sudo ip netns exec $r ip addr add 10.0.$lan.254/24 dev int_eth0
 done
 
-# --- GRE TUNNEL ---
+#creo il tunnel gre
 sudo modprobe ip_gre
+
+#il tunnel si fa sulle interfacce di rete (virtuali essendo a livello 3) dei router!!! tra R1 E R2 
 sudo ip netns exec R1 ip tunnel add G1 mode gre remote 10.0.10.6 local 10.0.10.1 ttl 63
 sudo ip netns exec R2 ip tunnel add G1 mode gre remote 10.0.10.1 local 10.0.10.6 ttl 63
-for ns in R1 R2; do sudo ip netns exec $ns ip link set G1 up; done
+
+#metto in up l'interfaccia
+for ns in R1 R2; do 
+  sudo ip netns exec $ns ip link set G1 up; 
+done
 sudo ip netns exec R1 ip addr add 192.168.10.1/30 dev G1
 sudo ip netns exec R2 ip addr add 192.168.10.2/30 dev G1
+
+#obbligo il traffico tra R1 e R2 a passare per l'interfaccia tunnel gre
 sudo ip netns exec R1 ip route replace 10.0.2.0/24 via 192.168.10.2
 sudo ip netns exec R2 ip route replace 10.0.1.0/24 via 192.168.10.1
