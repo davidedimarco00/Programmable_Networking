@@ -2,7 +2,7 @@
 #attivo l'ambiente
 source ~/ryu-venv/bin/activate
 
-#Start the controllers with API servers on different ports
+#start the contrullers
 cd /home/robotic/ryu/ryu/app
 #C0
 ryu-manager --ofp-tcp-listen-port 6633 --wsapi-port 8080 simple_switch_13.py ofctl_rest.py
